@@ -110,7 +110,6 @@ const data = xlsx.utils.sheet_to_json(workSheet);
     })
  
 });
-//momgodb connections
 
 
 //excel to json and stord to data base 
