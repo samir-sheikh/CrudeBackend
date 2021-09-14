@@ -1,11 +1,6 @@
-import express, { json } from 'express';
+import express from 'express';
 import mongoose from 'mongoose';
-import fs from 'fs';
-import multer from 'multer';
-import excelToJson from 'convert-excel-to-json';
-import xlsxParser from 'xlsxParser';
-import xlsx from 'xlsx';
-import path from 'path';
+
 
 const app = express();
 
@@ -18,9 +13,9 @@ app.use(bodyParser.urlencoded({extended:true}))
 const port = 8000;
 const URI ='mongodb://localhost:27017/Crud';
 
-const userModel = mongoose.model('add',{name:String, age:Number,add:String})
+const userModel = mongoose.model('add',{name:String, age:Number,add:String,email:String,mob:Number,school:String})
 
-const xlModel = mongoose.model('xl',{xl:String})
+
 
 
 
@@ -38,8 +33,17 @@ mongoose.connect(URI).then( () => {
 
 
 
-app.get('/' , (req,res ) =>{
-    res.status(200).json("working properly carefully")
+app.get('/api/test' , (req,res ) =>{
+    res.status(200).json("working properly carefully and we working the Mern Stack Technology........")
+});
+
+
+app.post('/api/post' , (req,res ) =>{
+
+    let username = req.body.username
+    res.send(`The Recived Data is ${username}`)
+
+   
 })
 
 app.post('/add' , (req,res ) =>{
@@ -48,9 +52,12 @@ app.post('/add' , (req,res ) =>{
     let name = req.body.name;
     let age = req.body.age;
     let add = req.body.add;
-    let xl = req.body.xl;
+    let email =  req.body.email;
+    let mob = req.body.mob;
+    let school = req.body.school;
 
-    let newUser = new userModel({name:name,age:age,add:add,xl:xl})
+
+    let newUser = new userModel({name:name,age:age,add:add,email:email,mob:mob,school:school})
 
     newUser.save( (error) =>{
 
@@ -66,74 +73,45 @@ app.post('/add' , (req,res ) =>{
 })
 
 
+app.post('/getUser' , (req , res) => {
 
-
-
-app.get('/xl' , (req,res ) =>{
-
-
-    let file = xlsx.readFile(req.body.file);
-
-  
-
-    // console.log(file);
-    // const wb = xlsx.readFile('./test.xlsx');
-// console.log(wb);
-
-const workSheet = file.Sheets['Sheet1']
-
-console.log(workSheet);
-
-const data = xlsx.utils.sheet_to_json(workSheet);
-  console.log(data);
-
-  return  res.status(200).json(data)
-  
-
-
-
-
-
-    let xl = req.body.xl;
-
-    let newUser = new xlModel({xl:xl})
-
-    newUser.save( (error) =>{
-
-        if(error){
-            res.send("Data Submission Faild")
+    userModel.find({} , (err,document) => {
+        if(err){
+            res.send("Somthing went rong")
+        }else{
+            res.send(document)
         }
-        else{
-            res.send("Data Add Sucessfully.......")
-        }
-
     })
- 
-});
 
 
-//excel to json and stord to data base 
+})
+app.post('/getData' , (req,res) => {
 
-// global.__basedir = __dirname;
-// -> Multer Upload Storage
-const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
-        cb(null, __basedir + '/uploads/')
-    },
-    filename: (req, file, cb) => {
-        cb(null, file.fieldname + "-" + Date.now() + "-" + file.originalname)
-    }
-});
- 
-const upload = multer({storage: storage});
- 
-// -> Express Upload RestAPIs
-app.post('/api/uploadfile', upload.single("uploadfile"), (req, res) =>{
-    importExcelData2MongoDB(__basedir + '/uploads/' + req.file.filename);
-    res.json({
-        'msg': 'File uploaded/import successfully!', 'file': req.file
-    });
-});
+   let serchField = req.query.name;
+    userModel.find({name:{$regex : serchField,$options:'$i'}})
+    .then(data => {
+        res.send(data)
+        console.log(data);
+    }).catch(err =>{
+        console.log(err);
+        res.send(err);
+    })
+})
+
+app.post('/serchData' , (req,res) => {
+
+    let serch = new RegExp (req.body.query);
+
+     userModel.find({name:{$regex : serch,$options:'$i'}})
+     .then(data => {
+         res.send(data)
+         console.log(data);
+     }).catch(err =>{
+         console.log(err);
+         res.send(err);
+     })
+ })
+
 
 
 
